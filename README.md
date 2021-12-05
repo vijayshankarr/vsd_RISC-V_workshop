@@ -117,10 +117,81 @@ Makerchip provides free and instant access to the latest tools from your browser
 
 In this workshop, our aim is to create a RISCV core using TL Verilog. So, to get the understanding of basics of Digital design and a feel of Makerchip IDE to write TL-verlog codes, we start with Combinational Circuits.
 
-##Combinational Circuts:
-We implement the basic logic gates and then implement a simple calculator.
+## Simple Calculator :
+We start by implementing the basic logic gates and then finally desgin a simple calculator. This performs a add, sub, mult and div operation on the two input and gives one of the result as output based on the select line value.
 ![image](https://user-images.githubusercontent.com/94952142/144738064-2f3aef06-ee02-4c77-abef-7df0a755f510.png)
 
+Next, we use the stored output as input by feeding the output back as one of the input. This way the output stored till the next clock edge can be used as input. 
+
+![image](https://user-images.githubusercontent.com/94952142/144740130-0b4717cc-a87b-461b-b68a-2bea05336ad4.png)
+
+If there is too much path delay between two flip flops, then this circuit becomes slow. This happens when the signal has to travel from one end to another. So, we need to use slow clocks. This problem is overcome by pipelining the logic. Pipelining is done by dividing the signal path and introducing flip-flops at each stage. By doing so, we can increase the clock speed.
+
+Pipelined calculator is implemented as follows :
+![image](https://user-images.githubusercontent.com/94952142/144741050-5a7e069c-002a-48af-bbc4-72fc47a02938.png)
+
+We can control the stage or an logic based on a condition, hence making sure the logic is working only when valid. The validity can be implemented as follows:
+![image](https://user-images.githubusercontent.com/94952142/144741163-4c8ac18c-de5b-45c2-8b84-9d10a9847b5a.png)
+
+Finally, we add a memory block to store the output.
+![image](https://user-images.githubusercontent.com/94952142/144741245-1fdddc66-7c11-41a3-8413-f11b33745586.png)
+
+
+# Basic RISC V CPU microarchitecture
+We now will implement the RISC V CPU. The top level block diagram is as follows:
+![image](https://user-images.githubusercontent.com/94952142/144741397-debf1a8b-6f8a-478f-9ab5-6b5cc3d5169b.png)
+
+The pipelined logical flow plan for the same looks as follows:
+
+![image](https://user-images.githubusercontent.com/94952142/144741433-142d3229-c7e2-406e-98ab-d809fd040b6f.png)
+
+First the program counter and cicuit to fetching the instruction from memory is implemented. This process is called Fetching.
+
+Then the decoding cicuit, which will decode the instruction is implemented. Here, the instruction and data is separated and the type of instruction is understood. This stage is called Decoding.
+
+Next, the logic for reading from registers is implemented. The register addresses from the previous step is taken and the contents of the registers are accessed.
+
+After this, the logic to execute the instruction is implemented. This is similar to the calculator we implemented in the beginning. This can also be seen as ALU. The types of operation that this ALU can do is defined and then the ALU multiplexer is defined. Based on the instruction the operations of the multiplexer can be controlled.
+
+Then the logic to write into the registers back is implemented. Here, the register address to write into is taken from the Decoding step and then the output or result from the ALU is written into the register.
+
+At last, we add the validity and branch target to compute the program counter. The final pipelined flow is as follows :
+
+![image](https://user-images.githubusercontent.com/94952142/144744409-e209e4e1-afec-4a8f-88cb-f31383873ace.png)
+
+The final code looks as follows :
+
+![image](https://user-images.githubusercontent.com/94952142/144742773-4bf68b6b-cc5f-4b0c-bd03-2287d3ff8a62.png)
+
+![image](https://user-images.githubusercontent.com/94952142/144742791-8b5c3e8b-2a03-42e5-8c47-df5212b2b647.png)
+
+![image](https://user-images.githubusercontent.com/94952142/144742803-25d08b2a-5eb8-4f49-bc8b-317503837a94.png)
+
+![image](https://user-images.githubusercontent.com/94952142/144742817-6763bc77-98d8-458d-bda4-4a45d21ed584.png)
+
+![image](https://user-images.githubusercontent.com/94952142/144742827-e7adfd73-4a94-4d49-b1a5-05c96378aea5.png)
+
+## Pipelining Hazards
+Two of the pipelining hazards are discussed and solutions for the same are provided. 
+- Register Read after Write hazard.
+  This happens when there is a read instruction from a register, where the register write operation happened in just the previous instruction. So, the read operation has to wait another cycle to get the value written to the register, which can affect the flow.
+  This can be solved by introducing the Register File Bypass. Here, if the current instruction is read and the previous instruction is write, and the registers are same, then we try to bypass the register read and take the previous ALU output as input for the ALU in the present instruction.
+  
+- Branch target is calculated in the 3rd stage of pipeline, but the PC that has to be calucated for the next instruction needs to wait for two cycles to get the branch target from the previous instruction. This creates problem is calculating the right program counter.
+  This is solved by checking for the previous two taken branches.
+
+## Completing the RISCV CPU
+All the instructions are decoded and complete ALU logic is implemented. At the end, the D-Memory block is added and load and store logics are implemented to get the complete CPU.
+Complete CPU code :
+![image](https://user-images.githubusercontent.com/94952142/144743934-d6406233-b25c-4949-be62-b23c05172ec9.png)
+![image](https://user-images.githubusercontent.com/94952142/144744250-1c50db7f-c87e-492b-b5b4-dfb82bc255e5.png)
+![image](https://user-images.githubusercontent.com/94952142/144744261-f2dcc389-c889-4b0a-a524-15c78903a620.png)
+![image](https://user-images.githubusercontent.com/94952142/144744271-b6aa7ac9-2cfa-4be1-b259-29c1ed453534.png)
+![image](https://user-images.githubusercontent.com/94952142/144744277-96be59b3-37d7-4c35-aa85-a774932ca15e.png)
+![image](https://user-images.githubusercontent.com/94952142/144744291-a0dff973-f081-403e-89ac-69bfd726dd3e.png)
+![image](https://user-images.githubusercontent.com/94952142/144744308-2333a67d-bffe-41ed-ae7a-07026b018620.png)
+![image](https://user-images.githubusercontent.com/94952142/144744318-4815d9ad-4c7f-43fd-ab35-ffc06e70eb03.png)
+![image](https://user-images.githubusercontent.com/94952142/144744346-14ac35ed-a3d9-4847-bf57-408f906dbade.png)
 
 
 
